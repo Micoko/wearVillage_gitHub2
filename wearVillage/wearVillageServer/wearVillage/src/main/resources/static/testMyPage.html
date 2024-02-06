@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<input class="input_box" type="file" accept="image/*">
+<img class="output_box">
+<img class="output_box_after" src="" alt="">
+
+    <script>
+
+ document.querySelector(".input_box").addEventListener('change',function(){
+
+let blobURL = URL.createObjectURL(this.files[0]);
+console.log(this.files[0])
+
+let newPromise = new Promise((resolve,reject)=>{
+
+document.querySelector(".output_box").src = blobURL;
+
+resolve();
+
+});
+
+ let task2 = async()=>{
+
+ console.log(blobURL); 
+
+ await newPromise;
+
+     await URL.revokeObjectURL(blobURL);
+
+
+}
+
+ task2(); 
+
+})
+        
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+    <html xmlns:th="https://www.thymeleaf.org">
+    <!-- <html xmlns:th="https://www.thymeleaf.org"
+    xmlns:layout="https://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/default}"> -->
+    <head>
+    <title>채팅 | 옷빌리지</title>
+    <link
+    rel="icon"
+    type="image/x-icon"
+    href="img/img_wearVillageLogo.png"
+    />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no,maximum-scale=0">
+
+    </head>
+    <body >
+
+
+    <!-- <div class="chat_content" layout:fragment="content"> -->
+    <link layout:fragmnet="css" rel="stylesheet" href="css/chat.css">
+
+    <script src="https://cdn.jsdelivr.net/webjars/sockjs-client/1.0.2/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/webjars/stomp-websocket/2.3.3/stomp.min.js"></script>
+
+    <div class ="chat_msgArea_outZone chatBody" >
+        <div class="chat_modal">
+            <div class="chat_modalRootContainer">
+            <div class="chat_modalContainer"></div>
+                <div class="chat_modalCloseBtn">
+                    <div class="verticalLine"></div>
+                    <div class="horizontalLine"></div>
+                </div>
+
+            </div>
+        </div>
+        <div class="chat_topContent">
+            <div class="chat_topContent_details">
+                <div class="chat_topContent_item1"></div>
+                <div class="chat_topContent_item2"></div>
+                <div class="chat_topContent_item3"></div>
+            </div>
+        </div>
+    <!--채팅 디스플레이 구간-->
+    <div class="chat_midContent">
+        <div class="chat_notice">
+           <div class="chat_notice_content"> <div class="chat_noticeClose">X</div>
+           <span class = "chat_noticeTitle">채팅 유의사항</span>
+            <p class = "chat_noticeText">
+                욕설, 성희롱시 사이트 운영에 제한이 생길 수 있습니다.<br>
+                건전한 채팅 문화에 앞장서주시기 바랍니다.
+            </p>
+        </div></div>
+
+    <div class="chat_msgArea">
+
+    </div>
+    </div>
+    <!--채팅 입력 구간-->
+
+
+    <div class="chat_bottomContent">
+            <div class="chat_bottom_nav">
+                <img class="chat_bottom_nav_img chat_mapBtn" src="../img/img_mapIcon.png" alt="">
+                <input id = "chat_imageInput" class="chat_imgBtn" type="file" accept="image/jpg,image/png,image/webp" style="display: none" multiple>
+                <label for="chat_imageInput" style="padding-top: 4px;"><img class="chat_bottom_nav_img" src="../img/img_photoIcon.png" alt=""></label>
+
+                <img class="chat_bottom_nav_img chat_postBtn" src="../img/img_postIcon.png" alt="">
+
+        <!-- <img src="img/img_wearVillageMypage.png" alt="">
+        <img src="img/img_wearVillageLogo.png" alt=""> -->
+    </div>
+    <textarea name="" spellcheck="false" id="msg" cols="30" rows="4" maxlength="500"></textarea>
+    <button id="button-send" type="button" value="보내기">전송</button>
+    </div>
+    </div>
+
+
+<!-- 
+    <div class="diveloperZone">
+    <p>"임시 개발자 영역입니다."</p>
+    <button type="button" id = "button-exit">나가기</button>
+    <button type="button" id = "button-join">접속하기</button>
+    <input type="text" id="username" placeholder="닉네임">
+</div> -->
+    <script th:inline="javascript">
+
+        let $th_chatHistory = '[[${chat_history}]]';
+        let $th_postSubtitle = '[[${postSubtitle}]]';
+        let $th_postPrice = '[[${postPrice}]]';
+        let $th_postRentDefaultPrice ='[[${postRentDefaultPrice}]]';
+        let $th_postRentDayPrice = '[[${postRentDayPrice}]]';
+        let $th_postThumbnailUrl = '[[${postThumbnailUrl}]]';
+        let $th_addressee = '[[${postWriterId}]]';
+        let $th_postMapInfo = [[${postMapInfo}]];
+        let $th_postId = [[${postId}]];
+        let $th_sender = '[[${myId}]]';
+        let $th_theme = '[[${theme}]]';
+        let $th_postUserInfo = [[${postUserInfo}]];
+        let $th_myUserInfo = [[${myUserInfo}]];
+    </script>
+    <script layout:fragment="script" rel="text/javascript" src="js/chat.js"></script>
+
+
+
+    <script>
+        let $chat_modalContainer = document.querySelector(".chat_modalContainer")
+        let $chat_modalRootContainer = document.querySelector(".chat_modalRootContainer")
+        let $chat_mapBtn = document.querySelector(".chat_mapBtn");
+        let $chat_postBtn = document.querySelector(".chat_postBtn");
+        let $chat_imgBtn = document.querySelector(".chat_imgBtn");
+        let $chat_modal = document.querySelector(".chat_modal");
+        let $chat_modalCloseBtn = document.querySelector(".chat_modalCloseBtn");
+        let modalInit = $chat_modalContainer.getAttribute("style");
+        let btnInit = $chat_modalCloseBtn.getAttribute("style");
+        let imgUrlArr=[];
+
+
+        function resizeDetect(){
+            if(window.innerHeight>580) {
+                $chat_modalCloseBtn.style = "top:55%;"
+            } else {
+                $chat_modalCloseBtn.style = "top:0; margin-top:auto;margin-bottom:auto"
+
+            }
+        }
+        //네비게이션 메뉴 : 포스트로 이동
+        $chat_postBtn.addEventListener("click",()=>{
+            $chat_modalContainer.style.backgroundColor="rgba(0,0,0,0)";
+        let goPostBtn =document.createElement('div')
+            goPostBtn.setAttribute('style','display:inline;cursor:pointer;width:150px;height:63px;border:2px solid white;border-radius:15px;margin-top:auto;margin-bottom:auto;margin-left:auto;margin-right:auto;background-color:black;color:white;text-align:center;line-height:63px;');
+            goPostBtn.innerText="포스트로 이동";
+            goPostBtn.onclick = ()=>{
+                location.href="../viewPost2?id="+$th_postId;
+            }
+        $chat_modalContainer.append(goPostBtn)
+        $chat_modalRootContainer.style.display="flex";
+           window.addEventListener('resize',resizeDetect)
+
+
+
+        })
+        //네비게이션 메뉴 : 지도 켜기
+        $chat_mapBtn.addEventListener("click",()=>{
+            $chat_modalContainer.style.backgroundColor="white";
+            $chat_modalContainer.style="width:360px; height:380px;"
+            localStorage.setItem("MapInfo",$th_postMapInfo);
+            $chat_modalContainer.innerHTML="<object data='maps3.html' width='100%' height='100%' style='overflow: hidden'>지도 정보를 표시할 수 없습니다.</object>"
+            $chat_modalRootContainer.style.display="flex";
+        })
+
+        //네비게이션 메뉴 : 이미지 보내기
+        $chat_imgBtn.addEventListener("change",function (){
+            $chat_modalContainer.style="width:360px; height:380px;background-color:rgba(50,50,50,0.9)";
+            let createImageTag = document.createElement('img');
+            let createBlobUrl = window.URL.createObjectURL(this.files[0]);
+            let minView = 0;
+            let nowView = 0;
+            let maxView = this.files.length-1
+            for (let i = 0; i <= maxView; i++) {
+                imgUrlArr.push(URL.createObjectURL(this.files[i]))
+
+            }
+
+            createImageTag.src = imgUrlArr[nowView];
+            createImageTag.style="width:95%;height:95%;margin:auto auto;border-radius:15px;";
+
+            $chat_modalContainer.append(createImageTag);
+            $chat_modalRootContainer.style.display="flex";
+            let createPrevNextBtn = document.createElement('div')
+            createPrevNextBtn.style="position:absolute;display:flex;"
+            let createNextBtn = document.createElement('div')
+            createNextBtn.style="margin-left:190px;color:#ff6d6d;;user-select:none;font-size:30px;cursor:pointer;";
+            createNextBtn.textContent="▶"
+            createNextBtn.onclick=Next;
+            let createImgSendBtn = document.createElement('div')
+            createImgSendBtn.style="border-radius: 15px;background-color: rgb(255 149 149);border: 1px solid white;position: relative;top: 185px;display: flex;align-items: center;justify-content: center;height: 40px;width: 110px;cursor:pointer;user-select:none;font-weight:bold;"
+            createImgSendBtn.textContent=`${maxView+1}개 보내기`;
+            createImgSendBtn.onclick=uploadChatImg;
+            let createPrevBtn = document.createElement('div')
+            createPrevBtn.style="margin-right:190px;color:#ff6d6d;;user-select:none;font-size:30px;cursor:pointer;";
+            createPrevBtn.textContent="◀"
+            createPrevBtn.onclick=Prev;
+            createPrevNextBtn.append(createPrevBtn,createImgSendBtn,createNextBtn);
+            if(window.innerHeight<580) {
+                $chat_modalCloseBtn.style = "top:6%;"
+            }
+            window.addEventListener('resize',()=>{
+                if(window.innerHeight<580) {
+                    $chat_modalCloseBtn.style = "top:6%;"
+                }
+            })
+
+
+            $chat_modalContainer.append(createPrevNextBtn);
+
+            //이미지 업로드
+
+
+            function uploadChatImg(){
+
+                let files = [];
+                let form = new FormData();
+                let $chat_imageInput = document.getElementById("chat_imageInput");
+                console.log($chat_imageInput.files.length)
+                for (let i = 0; i <$chat_imageInput.files.length; i++) {
+                    form.append("files",$chat_imageInput.files[i]);
+
+                }
+            let url = "/chatimg";
+            let options = {method:"post",body:form}
+            fetch(url,options)
+                .then(res=>res.json())
+                .then(res=> {
+                    let imgJson = [];
+                    for (let i = 0; i < res.length; i++) {
+                        imgJson.push(res[i].body);
+                    }
+                    send(encodeURIComponent(JSON.stringify(imgJson)).replace(/[']/g,escape),"json");
+                    closeModal()
+                    }
+                );
+            }
+
+
+            //Prev 버튼 기능
+            function Prev(){
+                //nowView가 0일 때 이미지의 끝으로 이동
+                if(minView==nowView){
+                    nowView=maxView;
+                } else {
+                    nowView--;
+                }
+                createImageTag.src = imgUrlArr[nowView];
+                let pageOutputPanel = document.createElement('div')
+                pageOutputPanel.innerText=nowView+1;
+                pageOutputPanel.style="position:absolute;margin:auto;font-size:180px;animation-name:light;animation-duration:0.5s;opacity:0;color:white;";
+                $chat_modalContainer.append(pageOutputPanel)
+
+
+
+            }
+            //Next 버튼 기능
+            function Next(){
+                if(maxView==nowView){
+                    nowView=minView;
+                } else {
+                    nowView++;
+                }
+                createImageTag.src = imgUrlArr[nowView];
+                let pageOutputPanel = document.createElement('div')
+                pageOutputPanel.innerText=nowView+1;
+                pageOutputPanel.style="position:absolute;margin:auto;font-size:180px;animation-name:light;animation-duration:0.5s;opacity:0;color:white;";
+                $chat_modalContainer.append(pageOutputPanel)
+            }
+        })
+
+
+        // 네비게이션 메뉴 : 닫기
+        $chat_modalCloseBtn.addEventListener("click",closeModal)
+
+        function closeModal(){
+            $chat_modalContainer.innerHTML='';
+            $chat_modalContainer.style.cssText=modalInit;
+            $chat_modalCloseBtn.style.cssText=btnInit;
+            $chat_modalRootContainer.style.display="none";
+            window.removeEventListener("resize",resizeDetect)
+            //닫기를 누르면 value를 초기화시킨다.
+            // onchage이벤트이기 때문에 초기화를 안 시켜놓으면 같은 사진을 업로드 했을 때 이벤트리스너가 동작 안 함.
+            $chat_imgBtn.value = $chat_imgBtn.getAttribute("value")
+            imgUrlArr=[];
+
+            let revoke = async ()=>{await
+                imgUrlArr.forEach(e=>{
+                    URL.revokeObjectURL(e);
+                })}
+            revoke();
+        }
+        // 닫기 버튼
+
+    </script>
+
+
+<!-- </div> -->
+</body>
+</html>
